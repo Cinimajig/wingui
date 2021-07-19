@@ -2,6 +2,8 @@
 
 use ::std::fmt;
 
+use crate::get_wide_string;
+
 /// A struct for making working with unicode-strings easier
 ///
 /// ## Examples
@@ -106,15 +108,3 @@ impl fmt::Display for WideString {
         write!(f, "{}", string)
     }
 }
-
-/// Converts a `&str` to a vector of UTF-16 bytes
-fn get_wide_string(text: &str) -> Vec<u16> {
-    use ::std::ffi::OsStr;
-    use ::std::os::windows::ffi::OsStrExt;
-
-    OsStr::new(text)
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect()
-}
-
