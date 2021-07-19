@@ -9,7 +9,19 @@ pub struct ComInit;
 pub struct RoInit;
 
 impl ComInit {
-    /// Initializes the COM library as single-threaded
+    /// Initializes the COM library as single-threaded.
+    /// This function fails, if it's already initialized for the current thread
+    ///
+    /// ## Example
+    /// ```
+    /// use winutils::init::ComInit;
+    ///
+    /// fn main() -> std::io::Result<()> {
+    ///     let _com = ComInit::init_sta()?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn init_sta() -> io::Result<Self> {
         unsafe {
             let result = CoInitializeEx(ptr::null_mut(), 2);
@@ -21,7 +33,19 @@ impl ComInit {
         Ok(Self)
     }
 
-    /// Initializes the COM library as multi-threaded
+    /// Initializes the COM library as multi-threaded.
+    /// This function fails, if it's already initialized for the current thread
+    ///
+    /// ## Example
+    /// ```
+    /// use winutils::init::ComInit;
+    ///
+    /// fn main() -> std::io::Result<()> {
+    ///     let _com = ComInit::init_mta()?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn init_mta() -> io::Result<Self> {
         unsafe {
             let result = CoInitializeEx(ptr::null_mut(), 0);
@@ -35,7 +59,19 @@ impl ComInit {
 }
 
 impl RoInit {
-    /// Initializes the Windows Runtime as single-threaded
+    /// Initializes the Windows Runtime as single-threaded.
+    /// This function fails, if it's already initialized for the current thread
+    ///
+    /// ## Example
+    /// ```
+    /// use winutils::init::RoInit;
+    ///
+    /// fn main() -> std::io::Result<()> {
+    ///     let _com = RoInit::init_sta()?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn init_sta() -> io::Result<Self> {
         unsafe {
             let result = RoInitialize(0);
@@ -47,7 +83,19 @@ impl RoInit {
         Ok(Self)
     }
 
-    /// Initializes the Windows Runtime as multi-threaded
+    /// Initializes the Windows Runtime as multi-threaded.
+    /// This function fails, if it's already initialized for the current thread
+    ///
+    /// ## Example
+    /// ```
+    /// use winutils::init::RoInit;
+    ///
+    /// fn main() -> std::io::Result<()> {
+    ///     let _com = RoInit::init_mta()?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     pub fn init_mta() -> io::Result<Self> {
         unsafe {
             let result = RoInitialize(1);

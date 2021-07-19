@@ -4,6 +4,9 @@
 /// Module for working with unicode-strings
 #[cfg(feature = "wstring")] pub mod wstring;
 
+/// Module for helping with Win32 GUI
+#[cfg(feature = "wstring")] pub mod window;
+
 use ::std::{ffi::c_void, ptr};
 
 /// A function for showing a `MessageBox`
