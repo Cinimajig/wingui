@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use std::mem;
 use ::std::{ffi::c_void, io, ptr};
 use crate::get_wide_string;
 
@@ -69,14 +70,14 @@ pub fn msgbox(text: &str, title: Option<&str>, mb_type: u32) -> MBResult {
                 return MessageBoxW(ptr::null_mut(), wtext.as_ptr(), wtitle.as_ptr(), mb_type);
 
                 #[cfg(feature = "winapi-crate")]
-                return winapi::um::winuser::MessageBoxW(ptr::null_mut(), wtext.as_ptr(), wtitle.as_ptr(), mb_type);
+                return mem::transmute(winapi::um::winuser::MessageBoxW(ptr::null_mut(), wtext.as_ptr(), wtitle.as_ptr(), mb_type));
             },
             None => {
                 #[cfg(not(feature = "winapi-crate"))]
                 return MessageBoxW(ptr::null_mut(), wtext.as_ptr(), ptr::null(), mb_type);
 
                 #[cfg(feature = "winapi-crate")]
-                return winapi::um::winuser::MessageBoxW(ptr::null_mut(), wtext.as_ptr(), ptr::null(), mb_type);
+                return mem::transmute(winapi::um::winuser::MessageBoxW(ptr::null_mut(), wtext.as_ptr(), ptr::null(), mb_type));
             }
         }
     }

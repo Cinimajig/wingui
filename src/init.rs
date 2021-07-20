@@ -28,7 +28,7 @@ impl ComInit {
     pub fn init_sta() -> io::Result<Self> {
         #[cfg(feature = "winapi-crate")]
         unsafe {
-            let result = winapi::um::objbase::CoInitializeEx(ptr::null_mut(), 2);
+            let result = winapi::um::combaseapi::CoInitializeEx(ptr::null_mut(), 2);
             if result != 0 {
                 return Err(io::Error::from_raw_os_error(result as i32));
             }
@@ -61,7 +61,7 @@ impl ComInit {
     pub fn init_mta() -> io::Result<Self> {
         #[cfg(feature = "winapi-crate")]
         unsafe {
-            let result = winapi::um::objbase::CoInitializeEx(ptr::null_mut(), 0);
+            let result = winapi::um::combaseapi::CoInitializeEx(ptr::null_mut(), 0);
             if result != 0 {
                 return Err(io::Error::from_raw_os_error(result as i32));
             }
@@ -134,7 +134,7 @@ impl Drop for ComInit {
     fn drop(&mut self) {
         unsafe {
             #[cfg(feature = "winapi-crate")]
-            winapi::um::objbase::CoUninitialize();
+            winapi::um::combaseapi::CoUninitialize();
 
             #[cfg(not(feature = "winapi-crate"))]
             CoUninitialize();
