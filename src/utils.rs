@@ -1,7 +1,6 @@
-#![allow(dead_code)]
+#![allow(dead_code, unused_imports)]
 
-use std::mem;
-use ::std::{ffi::c_void, io, ptr};
+use ::std::{ffi::c_void, io, ptr, mem};
 use crate::get_wide_string;
 
 /// Retrieves information about the current user.
