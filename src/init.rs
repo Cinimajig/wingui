@@ -126,6 +126,7 @@ impl Drop for RoInit {
     }
 }
 
+#[link(name = "runtimeobject")]
 extern "system" {
     fn RoInitialize(initType: i32) -> u32;
     fn RoUninitialize();
