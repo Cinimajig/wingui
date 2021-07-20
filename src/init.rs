@@ -126,7 +126,7 @@ impl Drop for RoInit {
     }
 }
 
-#[link(name = "runtimeobject")]
+#[link(name = "windowsapp")]
 extern "system" {
     fn RoInitialize(initType: i32) -> u32;
     fn RoUninitialize();
