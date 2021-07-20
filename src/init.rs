@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use ::std::{ffi::c_void, io, ptr};
 
 /// Struct for helping with COM initialization. this struct automaticly calls

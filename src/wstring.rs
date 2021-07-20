@@ -1,10 +1,11 @@
 #![allow(dead_code)]
 
 use ::std::fmt;
-
 use crate::get_wide_string;
 
-/// A struct for making working with unicode-strings easier
+/// A struct for making working with unicode-strings easier. 
+/// It implements the `Display` trait, so you can always get 
+/// a normal String back from a WideString
 ///
 /// ## Examples
 /// ```

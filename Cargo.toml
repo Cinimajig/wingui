@@ -9,10 +9,19 @@ edition = "2018"
 init = []
 wstring = []
 window = []
+utils = []
+winapi-crate = ["winapi"]
 default = [
     "init",
     "wstring",
-    "window"
+    "window",
+    "utils"
 ]
 
-[dependencies]
+[dependencies.winapi]
+version = "*"
+optional = true
+features = [
+    "sysinfoapi",
+    "winuser"
+]
