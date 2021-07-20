@@ -8,6 +8,7 @@ pub struct ComInit;
 
 /// Struct for helping with the Windows Runtime initialization. this struct automaticly calls
 ///  `RoUninitialize` when the variable is dropped
+#[cfg(feature = "winapi-crate")]
 pub struct RoInit;
 
 impl ComInit {
@@ -25,6 +26,15 @@ impl ComInit {
     /// }
     /// ```
     pub fn init_sta() -> io::Result<Self> {
+        #[cfg(feature = "winapi-crate")]
+        unsafe {
+            let result = winapi::um::objbase::CoInitializeEx(ptr::null_mut(), 2);
+            if result != 0 {
+                return Err(io::Error::from_raw_os_error(result as i32));
+            }
+        }
+
+        #[cfg(not(feature = "winapi-crate"))]
         unsafe {
             let result = CoInitializeEx(ptr::null_mut(), 2);
             if result != 0 {
@@ -49,6 +59,15 @@ impl ComInit {
     /// }
     /// ```
     pub fn init_mta() -> io::Result<Self> {
+        #[cfg(feature = "winapi-crate")]
+        unsafe {
+            let result = winapi::um::objbase::CoInitializeEx(ptr::null_mut(), 0);
+            if result != 0 {
+                return Err(io::Error::from_raw_os_error(result as i32));
+            }
+        }
+
+        #[cfg(not(feature = "winapi-crate"))]
         unsafe {
             let result = CoInitializeEx(ptr::null_mut(), 0);
             if result != 0 {
@@ -60,6 +79,7 @@ impl ComInit {
     }
 }
 
+#[cfg(feature = "winapi-crate")]
 impl RoInit {
     /// Initializes the Windows Runtime as single-threaded.
     /// This function fails, if it's already initialized for the current thread
@@ -76,7 +96,7 @@ impl RoInit {
     /// ```
     pub fn init_sta() -> io::Result<Self> {
         unsafe {
-            let result = RoInitialize(0);
+            let result = winapi::winrt::roapi::RoInitialize(0);
             if result != 0 {
                 return Err(io::Error::from_raw_os_error(result as i32));
             }
@@ -100,7 +120,7 @@ impl RoInit {
     /// ```
     pub fn init_mta() -> io::Result<Self> {
         unsafe {
-            let result = RoInitialize(1);
+            let result = winapi::winrt::roapi::RoInitialize(1);
             if result != 0 {
                 return Err(io::Error::from_raw_os_error(result as i32));
             }
@@ -113,25 +133,25 @@ impl RoInit {
 impl Drop for ComInit {
     fn drop(&mut self) {
         unsafe {
+            #[cfg(feature = "winapi-crate")]
+            winapi::um::objbase::CoUninitialize();
+
+            #[cfg(not(feature = "winapi-crate"))]
             CoUninitialize();
         }
     }
 }
 
+#[cfg(feature = "winapi-crate")]
 impl Drop for RoInit {
     fn drop(&mut self) {
         unsafe {
-            RoUninitialize();
+            winapi::winrt::roapi::RoUninitialize();
         }
     }
 }
 
-#[link(name = "WindowsApp")]
-extern "system" {
-    fn RoInitialize(initType: i32) -> u32;
-    fn RoUninitialize();
-}
-
+#[cfg(not(feature = "winapi-crate"))]
 #[link(name = "Ole32")]
 extern "system" {
     fn CoInitializeEx(pvreserved: *mut c_void, dwcoinit: u32) -> u32;

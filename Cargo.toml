@@ -23,5 +23,6 @@ version = "*"
 optional = true
 features = [
     "sysinfoapi",
-    "winuser"
+    "winuser",
+    "objbase"
 ]

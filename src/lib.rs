@@ -1,6 +1,9 @@
 #![allow(dead_code)]
 
 /// Module for helping `COM` and `Windows Runtime` initialization.
+///
+/// `Windows Runtime` initialization is only available with the
+/// winapi-crate feature enabled (linking issue)
 #[cfg(feature = "init")] pub mod init;
 
 /// Module for working with unicode-strings
