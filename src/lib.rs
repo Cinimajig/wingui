@@ -30,3 +30,18 @@ fn get_wide_string(text: &str) -> Vec<u16> {
         .chain(std::iter::once(0))
         .collect()
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use wstring::WideString;
+
+    #[test]
+    fn test_wstring() {
+        let mut a = WideString::from("Hello ");
+        a.push_str("world");
+        a.push_wide(&WideString::from("!"));
+
+        assert!(a.to_string().len() < a.bytes.len());
+    }
+}

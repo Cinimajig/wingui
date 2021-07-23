@@ -13,7 +13,7 @@ use crate::get_wide_string;
 /// let wstring = WideString::from("Hello world!");
 ///
 /// ```
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct WideString {
     pub bytes: Vec<u16>,
 }
@@ -23,6 +23,12 @@ impl From<&str> for WideString {
         Self {
             bytes: get_wide_string(text),
         }
+    }
+}
+
+impl Default for WideString {
+    fn default() -> Self {
+        Self { bytes: vec![0_u16] }
     }
 }
 
@@ -49,15 +55,21 @@ impl WideString {
         self.bytes.as_mut_ptr()
     }
 
-    /// Creates a `WideString` with `size` amount of zeroes
+    /// Creates a `WideString` with "size" amount of zeroes.
+    ///
+    /// If the given size is 0, then it returns from the `Default` constructor.
     pub fn with_size(size: usize) -> Self {
+        if size == 0 {
+            return Self::default();
+        }
+
         let mut vec = Vec::new();
         vec.resize(size, 0);
 
         Self { bytes: vec }
     }
 
-    /// Creates a `WideString` containing `text` and fills the remaining `size` with zeroes
+    /// Creates a `WideString` containing `text` and fills the remaining `size` with zeroes.
     pub fn from_str_with_size(text: &str, size: usize) -> Self {
         let mut vec = get_wide_string(text);
         vec.resize(size, 0);
@@ -65,8 +77,8 @@ impl WideString {
         Self { bytes: vec }
     }
 
-    /// Returns a raw `WideString` by reading the data at the raw pointer, until a 
-    /// null-byte (zero) is encoutered and then copy the content to gain ownership
+    /// Returns a `WideString` by reading the data at a raw pointer, until a 
+    /// null-byte (zero) is encoutered and then takes ownership.
     pub fn from_raw_ptr(ptr: *const u16) -> Self {
         unsafe {
             let len = (0..).take_while(|&i| *ptr.offset(i) != 0).count() + 1;
@@ -78,7 +90,10 @@ impl WideString {
         }
     }
 
-    /// Adds `other` to the WideString. If the underlying vector of `other` is empty, the function does nothing.
+    /// Adds Pushes another `WideString` to itself. 
+    /// It removes the null-byte from `self` before pushing on the other one.
+    ///
+    //// If the underlying vector of "other" is empty, the function does nothing.
     pub fn push_wide(&mut self, other: &Self) {
         let len = other.bytes.len();
         if len > 0 {
@@ -88,7 +103,9 @@ impl WideString {
         }
     }
 
-    /// Adds `text` to the WideString. If `text` is empty, the function does nothing.
+    /// Adds a `&str` to itself. 
+    /// 
+    /// If the text is empty, the function does nothing.
     pub fn push_str(&mut self, text: &str) {
         use ::std::ffi::OsStr;
         use ::std::os::windows::ffi::OsStrExt;
