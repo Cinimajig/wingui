@@ -35,22 +35,14 @@ impl Default for WideString {
 impl WideString {
     /// Returns a raw pointer to the vector's buffer.
     ///
-    /// The caller must ensure that the vector outlives the pointer this function returns, 
-    /// or else it will end up pointing to garbage. Modifying the vector may cause its 
-    /// buffer to be reallocated, which would also make any pointers to it invalid.
-    ///
-    /// The caller must also ensure that the memory the pointer (non-transitively) points 
-    /// to is never written to (except inside an `UnsafeCell`) using this pointer or any 
-    /// pointer derived from it. If you need to mutate the contents of the slice, use `mut_ptr`.
+    /// The same as `WideString.bytes.as_ptr()`
     pub fn ptr(&self) -> *const u16 {
         self.bytes.as_ptr()
     }
 
     /// Returns an unsafe mutable pointer to the vector's buffer.
     ///
-    /// The caller must ensure that the vector outlives the pointer this function returns, 
-    /// or else it will end up pointing to garbage. Modifying the vector may cause its 
-    /// buffer to be reallocated, which would also make any pointers to it invalid.
+    /// The same as `WideString.bytes.as_mut_ptr()`
     pub fn mut_ptr(&mut self) -> *mut u16 {
         self.bytes.as_mut_ptr()
     }
@@ -78,7 +70,7 @@ impl WideString {
     }
 
     /// Returns a `WideString` by reading the data at a raw pointer, until a 
-    /// null-byte (zero) is encoutered and then takes ownership.
+    /// null-byte (zero) is encoutered and then takes ownership (copy).
     pub fn from_raw_ptr(ptr: *const u16) -> Self {
         unsafe {
             let len = (0..).take_while(|&i| *ptr.offset(i) != 0).count() + 1;
