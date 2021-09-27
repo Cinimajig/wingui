@@ -36,6 +36,7 @@ impl WideString {
     /// Returns a raw pointer to the vector's buffer.
     ///
     /// The same as `WideString.bytes.as_ptr()`
+    #[inline]
     pub fn ptr(&self) -> *const u16 {
         self.bytes.as_ptr()
     }
@@ -43,6 +44,7 @@ impl WideString {
     /// Returns an unsafe mutable pointer to the vector's buffer.
     ///
     /// The same as `WideString.bytes.as_mut_ptr()`
+    #[inline]
     pub fn mut_ptr(&mut self) -> *mut u16 {
         self.bytes.as_mut_ptr()
     }
