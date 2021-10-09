@@ -1,10 +1,10 @@
 #![allow(dead_code)]
 
-use ::std::fmt;
 use crate::get_wide_string;
+use ::std::fmt;
 
-/// A struct for making working with unicode-strings easier. 
-/// It implements the `Display` trait, so you can always get 
+/// A struct for making working with unicode-strings easier.
+/// It implements the `Display` trait, so you can always get
 /// a normal String back from a WideString
 ///
 /// ## Examples
@@ -49,6 +49,12 @@ impl WideString {
         self.bytes.as_mut_ptr()
     }
 
+    /// Returns an empty `WideString`. **Make sure it's not empty before using
+    /// it with the Windows API**. If not, then use `Default` instead.
+    pub fn empty() -> Self {
+        Self { bytes: vec![] }
+    }
+
     /// Creates a `WideString` with "size" amount of zeroes.
     ///
     /// If the given size is 0, then it returns from the `Default` constructor.
@@ -71,7 +77,7 @@ impl WideString {
         Self { bytes: vec }
     }
 
-    /// Returns a `WideString` by reading the data at a raw pointer, until a 
+    /// Returns a `WideString` by reading the data at a raw pointer, until a
     /// null-byte (zero) is encoutered and then takes ownership (copy).
     pub fn from_raw_ptr(ptr: *const u16) -> Self {
         unsafe {
@@ -84,7 +90,7 @@ impl WideString {
         }
     }
 
-    /// Adds Pushes another `WideString` to itself. 
+    /// Adds Pushes another `WideString` to itself.
     /// It removes the null-byte from `self` before pushing on the other one.
     ///
     //// If the underlying vector of "other" is empty, the function does nothing.
@@ -97,8 +103,8 @@ impl WideString {
         }
     }
 
-    /// Adds a `&str` to itself. 
-    /// 
+    /// Adds a `&str` to itself.
+    ///
     /// If the text is empty, the function does nothing.
     pub fn push_str(&mut self, text: &str) {
         use ::std::ffi::OsStr;
