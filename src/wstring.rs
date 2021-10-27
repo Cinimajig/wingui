@@ -3,6 +3,8 @@
 use crate::get_wide_string;
 use ::std::fmt;
 
+pub use proc_wstring::wstr;
+
 /// A struct for making working with unicode-strings easier.
 /// It implements the `Display` trait, so you can always get
 /// a normal String back from a WideString

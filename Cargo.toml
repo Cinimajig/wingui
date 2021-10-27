@@ -7,8 +7,7 @@ edition = "2018"
 
 [features]
 init = []
-wstring = ["wstr-macro"]
-wstr-macro = ["proc-wstring"]
+wstring = ["proc-wstring"]
 window = []
 utils = []
 winapi-crate = ["winapi"]
