@@ -33,8 +33,16 @@ fn get_wide_string(text: &str) -> Vec<u16> {
 
 #[cfg(test)]
 mod test {
+    use crate::window::Window;
+
     use super::*;
     use wstring::WideString;
+    use window::Windowing;
+
+    #[derive(Default)]
+    struct Data {
+        age: i32,
+    }
 
     #[test]
     fn test_wstring() {
@@ -43,5 +51,15 @@ mod test {
         a.push_wide(&WideString::from("!"));
 
         assert!(a.to_string().len() < a.bytes.len());
+    }
+
+    #[test]
+    fn window() {
+        let mut wnd = window::Window::new(());
+        wnd.register("class_name");
+        wnd.create_window("TEST", 360, 120);
+        wnd.show();
+
+        wnd.run();
     }
 }
