@@ -14,7 +14,8 @@ pub type WPARAM = usize;
 pub type LPARAM = isize;
 pub type LRESULT = isize;
 
-type WNDPROC = Option<unsafe extern "system" fn(h_wnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT>;
+type _WNDPROC = unsafe extern "system" fn(h_wnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT;
+type WNDPROC = Option<_WNDPROC>;
 
 const IDI_APPLICATION: PWSTR = 0x7f00 as PWSTR;
 const IDC_ARROW: PWSTR = 0x7f00 as PWSTR;
@@ -30,11 +31,14 @@ const WM_CLOSE: u32 = 16;
 const WM_QUIT: u32 = 18;
 const WM_NOTIFY: u32 = 78;
 const WM_COMMAND: u32 = 273;
+const WM_WTSSESSION_CHANGE: u32 = 689;
 const WM_HOTKEY: u32 = 786;
 
 const WS_OVERLAPPEDWINDOW: u32 = 13565952;
 
 const SW_SHOW: i32 = 5;
+const SW_HIDE: i32 = 0;
+
 
 #[repr(C)]
 struct WNDCLASSEXW {
@@ -119,12 +123,12 @@ impl<T> Window<T> {
         &mut self.child
     }
 
-    pub fn hwnd(&self) -> HWND {
-        self.h_wnd
-    }
+    // pub fn hwnd(&self) -> HWND {
+    //     self.h_wnd
+    // }
 
     pub fn hinstance(&self) -> HINSTANCE {
-        self.h_instance
+        unsafe { GetModuleHandleW(ptr::null_mut()) }
     }
 
     pub fn title(&self) -> String {
@@ -145,62 +149,17 @@ impl<T> Window<T> {
         }
     }
 
-    pub fn show(&self) {
-        unsafe {
-            ShowWindow(self.h_wnd, SW_SHOW);
-        }
+}
+
+pub fn show(h_wnd: HWND) {
+    unsafe {
+        ShowWindow(h_wnd, SW_SHOW);
     }
+}
 
-    pub fn register(&mut self, class_name: &str) {
-        unsafe {
-            let cls = crate::get_wide_string(class_name);
-
-            let wc = WNDCLASSEXW {
-                cbSize: mem::size_of::<WNDCLASSEXW>() as u32,
-                style: CS_VREDRAW | CS_HREDRAW,
-                hIcon: LoadIconW(ptr::null_mut(), IDI_APPLICATION),
-                hInconSm: LoadIconW(ptr::null_mut(), IDI_APPLICATION),
-                hCursor: LoadCursorW(ptr::null_mut(), IDC_ARROW),
-                hInstance: self.h_instance,
-                lpszClassName: cls.as_ptr(),
-                lpfnWndProc: Some(DefWindowProcW),
-                ..Default::default()
-            };
-
-            if RegisterClassExW(&wc) != 0 {
-                self.cls = wc.lpszClassName;
-            }
-            
-        }
-    }
-
-    pub fn create_window(&mut self, title: &str, width: i32, height: i32) {
-        let wtitle = crate::get_wide_string(title);
-
-        unsafe {
-            let (x, y) = {
-                let mut rect = RECT::default();
-                let h_dsk = GetDesktopWindow();
-                GetClientRect(h_dsk, &mut rect);
-        
-                ((rect.right - width) / 2, (rect.bottom - height) / 2)
-            };
-
-            self.h_wnd = CreateWindowExW(
-                0,
-                self.cls,
-                wtitle.as_ptr(),
-                WS_OVERLAPPEDWINDOW,
-                x,
-                y,
-                width,
-                height,
-                ptr::null_mut(),
-                ptr::null_mut(),
-                self.h_instance,
-                ptr::null()
-            );
-        }
+pub fn hide(h_wnd: HWND) {
+    unsafe {
+        ShowWindow(h_wnd, SW_HIDE);
     }
 }
 
@@ -213,8 +172,80 @@ pub trait Windowing {
     fn on_destroy(&mut self, w_param: WPARAM, l_param: LPARAM) {}
     fn on_hotkey(&mut self, w_param: WPARAM, l_param: LPARAM) {}
     fn on_notify(&mut self, w_param: WPARAM, l_param: LPARAM) {}
+    fn on_session_change(&mut self, w_param: WPARAM, l_param: LPARAM) {}
 
-    fn run(&mut self);
+    fn run(&mut self) -> WPARAM {
+        unsafe {
+            let mut msg = MSG::default();
+
+            while GetMessageW(&mut msg, ptr::null_mut(), 0, 0) != 0 {
+                if msg.message == WM_QUIT {
+                    break;
+                }
+
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
+
+            msg.wParam
+        }
+    }
+
+    fn hinstance(&self) -> HINSTANCE {
+        unsafe { GetModuleHandleW(ptr::null_mut()) }
+    }
+
+    fn register(&mut self, class_name: &str) {
+        unsafe {
+            let cls = crate::get_wide_string(class_name);
+
+            let wc = WNDCLASSEXW {
+                cbSize: mem::size_of::<WNDCLASSEXW>() as u32,
+                style: CS_VREDRAW | CS_HREDRAW,
+                hIcon: LoadIconW(ptr::null_mut(), IDI_APPLICATION),
+                hInconSm: LoadIconW(ptr::null_mut(), IDI_APPLICATION),
+                hCursor: LoadCursorW(ptr::null_mut(), IDC_ARROW),
+                hInstance: self.hinstance(),
+                lpszClassName: cls.as_ptr(),
+                lpfnWndProc: Some(DefWindowProcW),
+                ..Default::default()
+            };
+
+            // if RegisterClassExW(&wc) != 0 {
+            //     self.cls = wc.lpszClassName;
+            // }
+        }
+    }
+
+    fn create_window(&mut self, class: &str, title: &str, width: i32, height: i32) -> HWND {
+        let wtitle = crate::get_wide_string(title);
+        let cls = crate::get_wide_string(class);
+
+        unsafe {
+            let (x, y) = {
+                let mut rect = RECT::default();
+                let h_dsk = GetDesktopWindow();
+                GetClientRect(h_dsk, &mut rect);
+        
+                ((rect.right - width) / 2, (rect.bottom - height) / 2)
+            };
+
+            CreateWindowExW(
+                0,
+                cls.as_ptr(),
+                wtitle.as_ptr(),
+                WS_OVERLAPPEDWINDOW,
+                x,
+                y,
+                width,
+                height,
+                ptr::null_mut(),
+                ptr::null_mut(),
+                self.hinstance(),
+                ptr::null()
+            )
+        }
+    }
 
     fn wnd_proc(&mut self, h_wnd: HWND, msg: u32, w_param: WPARAM, l_param: LPARAM) -> LRESULT {
         unsafe {
@@ -228,6 +259,7 @@ pub trait Windowing {
                 WM_DESTROY => self.on_destroy(w_param, l_param),
                 WM_HOTKEY => self.on_hotkey(w_param, l_param),
                 WM_NOTIFY => self.on_notify(w_param, l_param),
+                WM_WTSSESSION_CHANGE => self.on_session_change(w_param, l_param),
                 _ => result = DefWindowProcW(h_wnd, msg, w_param, l_param),
             };
 
@@ -236,24 +268,24 @@ pub trait Windowing {
     }
 }
 
-impl<T> Windowing for Window<T> {
-    fn run(&mut self) {
-        unsafe {
-            let func = Self::wnd_proc;
-            SetWindowLongPtrW(self.h_wnd, -4i32 /* GWL_WNDPROC */, func as isize);
+// impl<T> Windowing for Window<T> {
+//     fn run(&mut self) {
+//         unsafe {
+//             let func = Self::wnd_proc;
+//             SetWindowLongPtrW(self.h_wnd, -4i32 /* GWL_WNDPROC */, func as isize);
 
-            let mut msg = MSG::default();
-            while GetMessageW(&mut msg, ptr::null_mut(), 0, 0) != 0 {
-                if msg.message == WM_QUIT {
-                    break;
-                }
+//             let mut msg = MSG::default();
+//             while GetMessageW(&mut msg, ptr::null_mut(), 0, 0) != 0 {
+//                 if msg.message == WM_QUIT {
+//                     break;
+//                 }
 
-                TranslateMessage(&msg);
-                DispatchMessageW(&msg);
-            }
-        }
-    }
-}
+//                 TranslateMessage(&msg);
+//                 DispatchMessageW(&msg);
+//             }
+//         }
+//     }
+// }
 
 #[link(name = "User32")]
 extern "system" {

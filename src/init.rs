@@ -94,14 +94,19 @@ impl RoInit {
     /// }
     /// ```
     pub fn init_sta() -> io::Result<Self> {
+        
+        #[cfg(target_env = "msvc")]
         unsafe {
             let result = RoInitialize(0);
             if result != 0 {
                 return Err(io::Error::from_raw_os_error(result as i32));
             }
+
+            Ok(Self)
         }
 
-        Ok(Self)
+        #[cfg(target_env = "gnu")]
+        unimplemented!("Linking problems with runtimeobject.lib with gcc.")
     }
 
     /// Initializes the Windows Runtime as multi-threaded.
@@ -118,14 +123,19 @@ impl RoInit {
     /// }
     /// ```
     pub fn init_mta() -> io::Result<Self> {
+        #[cfg(target_env = "msvc")]
         unsafe {
             let result = RoInitialize(1);
             if result != 0 {
                 return Err(io::Error::from_raw_os_error(result as i32));
             }
+
+            Ok(Self)
         }
 
-        Ok(Self)
+
+        #[cfg(target_env = "gnu")]
+        unimplemented!("Linking problems with runtimeobject.lib with gcc.")
     }
 }
 
@@ -141,6 +151,7 @@ impl Drop for ComInit {
     }
 }
 
+#[cfg(target_env = "msvc")]
 impl Drop for RoInit {
     fn drop(&mut self) {
         unsafe {
@@ -156,6 +167,7 @@ extern "system" {
     fn CoUninitialize();
 }
 
+#[cfg(target_env = "msvc")]
 #[link(name = "runtimeobject")]
 extern "system" {
     fn RoUninitialize();
