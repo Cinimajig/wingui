@@ -14,6 +14,7 @@
 
 /// Module with some utility functions.
 #[cfg(feature = "utils")] pub mod utils;
+#[cfg(feature = "utils")] mod library; // Used by utils.rs.
 
 /// Converts a `&str` to a vector of UTF-16 bytes.
 #[cfg(any(
