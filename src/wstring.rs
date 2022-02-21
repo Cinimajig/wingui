@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 use crate::get_wide_string;
+use std::borrow::Borrow;
 use ::std::fmt;
 
 pub use proc_wstring::wstr;
@@ -16,8 +17,46 @@ pub use proc_wstring::wstr;
 ///
 /// ```
 #[derive(Debug)]
+#[repr(transparent)]
 pub struct WideString {
     pub bytes: Vec<u16>,
+}
+
+#[derive(Clone, Copy)]
+#[repr(transparent)]
+pub struct WideStr {
+    ptr: *const u16,
+}
+
+impl From<&WideString> for WideStr {
+    fn from(wide: &WideString) -> Self {
+        Self {
+            ptr: wide.bytes.as_ptr()
+        }
+    }
+}
+
+impl From<*const u16> for WideStr {
+    fn from(ptr: *const u16) -> Self {
+        Self { ptr }
+    }
+}
+
+impl WideStr {
+    const NULL: Self = Self { ptr: 0 as _ };
+
+    /// Copies the content and takes ownership in a (::crate::wstring::WideString)[`WideString`].
+    pub fn to_wide_string(&self) -> WideString {
+        WideString::from_raw_ptr(self.ptr)
+    }
+
+    /// Returns the bytes of the underlying pointer.
+    pub fn as_bytes(&self) -> &[u16] {
+        unsafe {
+            let len = (0..).take_while(|&i| *self.ptr.offset(i) != 0).count() + 1;
+            std::slice::from_raw_parts(self.ptr, len)
+        }
+    }
 }
 
 impl From<&str> for WideString {
@@ -25,6 +64,18 @@ impl From<&str> for WideString {
         Self {
             bytes: get_wide_string(text),
         }
+    }
+}
+
+impl From<String> for WideString {
+    fn from(text: String) -> Self {
+        text.as_str().into()
+    }
+}
+
+impl From<WideStr> for WideString {
+    fn from(text: WideStr) -> Self {
+        Self::from_raw_ptr(text.ptr)
     }
 }
 
@@ -128,3 +179,27 @@ impl fmt::Display for WideString {
         write!(f, "{}", string)
     }
 }
+
+impl fmt::Display for WideStr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+
+        unsafe {
+            let len = (0..).take_while(|&i| *self.ptr.offset(i) != 0).count() + 1;
+            let slice = std::slice::from_raw_parts(self.ptr, len);
+            
+            write!(f, "{}", String::from_utf16_lossy(&slice[..len - 1]))
+        }
+    }
+}
+
+impl fmt::Debug for WideStr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        unsafe {
+            let len = (0..).take_while(|&i| *self.ptr.offset(i) != 0).count() + 1;
+            let slice = std::slice::from_raw_parts(self.ptr, len);
+
+            write!(f, "WideStr({:?}) &{:?}", self.ptr, slice)
+        }
+    }
+}
+

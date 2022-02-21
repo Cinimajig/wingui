@@ -32,3 +32,5 @@ fn get_wide_string(text: &str) -> Vec<u16> {
         .collect()
 }
 
+#[cfg(test)]
+mod tests;
