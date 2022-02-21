@@ -1,7 +1,10 @@
 #![allow(dead_code)]
 
+//! Module for dealing with Unicode Strings returned from the Windows API.
+//! 
+//! *HINT!* The structs uses the [`From`] trait a lot.
+
 use crate::get_wide_string;
-use std::borrow::Borrow;
 use ::std::fmt;
 
 pub use proc_wstring::wstr;
@@ -76,6 +79,12 @@ impl From<String> for WideString {
 impl From<WideStr> for WideString {
     fn from(text: WideStr) -> Self {
         Self::from_raw_ptr(text.ptr)
+    }
+}
+
+impl From<*const u16> for WideString {
+    fn from(ptr: *const u16) -> Self {
+        Self::from_raw_ptr(ptr)
     }
 }
 
