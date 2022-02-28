@@ -60,6 +60,14 @@ impl WideStr {
             std::slice::from_raw_parts(self.ptr, len)
         }
     }
+
+    /// Reads `len` amount of characters of the pointer and returns it as a `String`.
+    pub fn read_part(&self, len: usize) -> String {
+        unsafe {
+            let slice = std::slice::from_raw_parts(self.ptr, len);
+            String::from_utf16_lossy(slice)
+        }
+    }
 }
 
 impl From<&str> for WideString {
