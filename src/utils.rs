@@ -3,6 +3,7 @@
 use ::std::{ffi::c_void, io, ptr, mem};
 use crate::get_wide_string;
 pub use crate::library::*;
+pub use crate::unique::*;
 
 /// Retrieves information about the current user.
 /// The function fails, if you retrieve information, which is not available.

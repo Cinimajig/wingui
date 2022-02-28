@@ -58,7 +58,23 @@ impl Library {
             FreeLibrary(self.0) != 0
         }
     }
+
+    // pub fn load_func(&self, func_name: &str) -> io::Result<*mut ExternFunction> {
+    //     unsafe {
+    //         let chr = CString::new(func_name)?;
+    //         let bytes = chr.as_bytes_with_nul();
+    //         let ptr = GetProcAddress(self.0, bytes.as_ptr());
+
+    //         if ptr.is_null() {
+    //             return Err(io::Error::last_os_error());
+    //         }
+
+    //         Ok(ptr)
+    //     }
+    // }
 }
+
+pub enum ExternFunction {}
 
 impl Drop for Library {
     fn drop(&mut self) {
@@ -72,4 +88,5 @@ impl Drop for Library {
 extern "system" {
     fn LoadLibraryW(lpLibFileName: *const u16) -> *mut c_void;
     fn FreeLibrary(hLibModule: *mut c_void) -> i32;
+    fn GetProcAddress(hModule: *mut c_void, lpProcName: *const u8) -> *mut ExternFunction;
 }

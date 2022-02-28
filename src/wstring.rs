@@ -192,6 +192,10 @@ impl fmt::Display for WideString {
 impl fmt::Display for WideStr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 
+        if self.ptr.is_null() {
+            return write!(f, "");
+        }
+
         unsafe {
             let len = (0..).take_while(|&i| *self.ptr.offset(i) != 0).count() + 1;
             let slice = std::slice::from_raw_parts(self.ptr, len);
