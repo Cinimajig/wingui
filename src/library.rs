@@ -49,7 +49,7 @@ impl Library {
     /// ```
     /// static mut LIB: Library = Library::empty();
     /// 
-    /// unsafe fn init() {
+    /// fn init() {
     ///     LIB = Library::load("User32.dll").unwrap();
     ///     // Do stuff here...
     /// 
@@ -79,9 +79,16 @@ impl Library {
             }
         }
     }
-}
 
-pub enum ExternFunction {}
+    /// A faster and unsafe version [`load_func`]. This function will panic if the 
+    /// function name is invalid or doesn't exist.
+    pub unsafe fn unsafe_func<F: Sized>(&self, name: &str) -> F {
+        let cname = CString::new(name).unwrap_or_default();
+        let proc = GetProcAddress(self.0, cname.as_bytes_with_nul().as_ptr());
+        let ref_proc: *const FARPROC = &proc;
+        ref_proc.cast::<Option<F>>().read().unwrap()
+    }
+}
 
 impl Drop for Library {
     fn drop(&mut self) {
@@ -109,7 +116,7 @@ impl Drop for Library {
 /// let func: FnWrapper<MsgBoxProc> = user32.load_func("MessageBoxW");
 /// 
 /// if func.is_valid() {
-///     let msgbox = func.0.unwrap();
+///     let msgbox = func.unwrap();
 ///     let msg = WideString::from("Hello from a dynamic library loader!");
 ///
 ///     msgbox(ptr::null(), msg.ptr(), ptr::null(), 0);
