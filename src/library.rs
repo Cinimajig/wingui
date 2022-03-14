@@ -4,11 +4,23 @@ use crate::get_wide_string;
 type FARPROC = Option<unsafe extern "system" fn() -> isize>;
 
 /// Struct for helping with loading external Libraries (dll).
-/// The Library is automaticly unloaded when dropped.
+/// The Library is automaticly unloaded when dropped, Unlees a static lib is loaded 
+/// (can check with the [`lib_type`](`Self::lib_type`)).
 /// 
 /// If you need to manually unload the dll, you can 
-/// call the `free_lib` function.
-pub struct Library(*mut c_void);
+/// call the `free_lib` function. This does nothing if it's a static library.
+#[derive(Debug)]
+pub struct Library {
+    handle: *mut c_void,
+    lib_type: LibType,
+}
+
+/// Library types used by [`Library`]. Static libraries will not be unloaded on [`Drop`].
+#[derive(Debug, Clone, Copy)]
+pub enum LibType {
+    Static,
+    Dynamic,
+}
 
 impl Library {
     /// Loads a dll file, from the system defined in `path`.
@@ -22,8 +34,47 @@ impl Library {
                 return Err(io::Error::last_os_error());
             }
 
-            Ok(Self(handle))
+            Ok(Self {
+                handle,
+                lib_type: LibType::Dynamic
+            })
         }
+    }
+
+    /// Returns a [`Library`] from a raw handle. You should wheater not, it's a static 
+    /// library or dynamic.
+    pub fn from_handle(handle: *mut c_void, dynamic: bool) -> io::Result<Self> {
+        if handle.is_null() {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a valid handle."));
+        }
+
+        Ok(Self {
+            handle,
+            lib_type: if dynamic { LibType::Dynamic } else { LibType::Static }
+        })
+    }
+
+    /// Returns a [`Library`], that is staticly linked to the program.
+    /// Nothing happens, when this gets dropped.
+    pub fn get_static_lib(path: &str) -> io::Result<Self> {
+        unsafe {
+            let w_path = get_wide_string(path);
+            let handle = GetModuleHandleW(w_path.as_ptr());
+
+            if handle.is_null() || path.len() == 0 {
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, "Not a lib name."));
+            }
+
+            Ok(Self {
+                handle,
+                lib_type: LibType::Static
+            })
+        }
+    }
+
+    /// Returns the [`LibType`] from `&self`.
+    pub fn lib_type(&self) -> LibType {
+        self.lib_type
     }
 
     /// Returns a Library struct, without loading any file.
@@ -33,13 +84,16 @@ impl Library {
     /// ```
     #[inline(always)]
     pub const fn empty() -> Self {
-        Self(0 as *mut c_void)
+        Self {
+            handle: 0 as *mut c_void,
+            lib_type: LibType::Static,
+        }
     }
 
     /// Returns the raw handle of the library.
     #[inline(always)]
     pub fn handle(&self) -> *mut c_void {
-        self.0
+        self.handle
     }
 
     /// Unloads the library without dropping the struct.
@@ -58,7 +112,7 @@ impl Library {
     /// ```
     pub fn free_lib(&self) -> bool {
         unsafe {
-            FreeLibrary(self.0) != 0
+            FreeLibrary(self.handle) != 0
         }
     }
 
@@ -68,7 +122,7 @@ impl Library {
         unsafe {
             match CString::new(name) {
                 Ok(cname) => {
-                    let proc = GetProcAddress(self.0, cname.as_bytes_with_nul().as_ptr());
+                    let proc = GetProcAddress(self.handle, cname.as_bytes_with_nul().as_ptr());
                     let ref_proc: *const FARPROC = &proc;
 
                     FnWrapper(ref_proc.cast::<Option<F>>().read())
@@ -84,7 +138,7 @@ impl Library {
     /// function name is invalid or doesn't exist.
     pub unsafe fn unsafe_func<F: Sized>(&self, name: &str) -> F {
         let cname = CString::new(name).unwrap_or_default();
-        let proc = GetProcAddress(self.0, cname.as_bytes_with_nul().as_ptr());
+        let proc = GetProcAddress(self.handle, cname.as_bytes_with_nul().as_ptr());
         let ref_proc: *const FARPROC = &proc;
         ref_proc.cast::<Option<F>>().read().unwrap()
     }
@@ -93,7 +147,12 @@ impl Library {
 impl Drop for Library {
     fn drop(&mut self) {
         unsafe {
-            FreeLibrary(self.0);
+            match self.lib_type {
+                LibType::Dynamic => {
+                    FreeLibrary(self.handle);
+                },
+                _ => (),
+            }
         }
     }
 }
@@ -150,4 +209,5 @@ extern "system" {
     fn LoadLibraryW(lpLibFileName: *const u16) -> *mut c_void;
     fn FreeLibrary(hLibModule: *mut c_void) -> i32;
     fn GetProcAddress(hModule: *mut c_void, lpProcName: *const u8) -> FARPROC;
+    fn GetModuleHandleW(lpModuleName: *const u16) -> *mut c_void;
 }
