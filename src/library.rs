@@ -8,7 +8,7 @@ type FARPROC = Option<unsafe extern "system" fn() -> isize>;
 /// (can check with the [`lib_type`](`Self::lib_type`)).
 /// 
 /// If you need to manually unload the dll, you can 
-/// call the `free_lib` function. This does nothing if it's a static library.
+/// call the [`free_lib`] function. This does nothing if it's a static library.
 #[derive(Debug)]
 pub struct Library {
     handle: *mut c_void,
@@ -98,7 +98,7 @@ impl Library {
 
     /// Unloads the library without dropping the struct.
     /// Only use this, if your variable does not go out 
-    /// of scope.
+    /// of scope. If the library is static, nothing will happen.
     /// # Example
     /// ```
     /// static mut LIB: Library = Library::empty();
@@ -112,7 +112,12 @@ impl Library {
     /// ```
     pub fn free_lib(&self) -> bool {
         unsafe {
-            FreeLibrary(self.handle) != 0
+            match self.lib_type {
+                LibType::Dynamic => {
+                    FreeLibrary(self.handle) != 0
+                },
+                _ => false,
+            }
         }
     }
 
@@ -146,14 +151,7 @@ impl Library {
 
 impl Drop for Library {
     fn drop(&mut self) {
-        unsafe {
-            match self.lib_type {
-                LibType::Dynamic => {
-                    FreeLibrary(self.handle);
-                },
-                _ => (),
-            }
-        }
+        self.free_lib();
     }
 }
 
