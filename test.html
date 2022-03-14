@@ -1,0 +1,84 @@
+<!doctype html><html lang="en"><head><!--[if IE]>
+	<meta http-equiv="refresh" content="0;URL='unsupported-browser.html'" />
+	<![endif]--><script>if (window.navigator.userAgent.match(/(MSIE|Trident)/)) {
+			window.location.href= "unsupported-browser.html";
+		}</script><meta charset="utf-8"/><meta name="google" content="notranslate"><meta name="robots" content="noindex"/><meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=3"/><title ng-bind="::'common_default_page_title' | translate"></title><base href="/"/><link rel="shortcut icon" href="favicon.ico"><script>var nexusVersion="1.75.1";
+		var nexusBuildTimestamp="20220310-1436";</script><script src="progressInfo.js?1.75.1-20220310-1436"></script><script src="application.conf.js?aa9a542f94de7bcb813e1b02691376b6"></script><script src="nexus-ui-configuration/applicationFeatures.conf.js"></script><script src="common/newrelic/newrelic.js?1.75.1-20220310-1436"></script><script>window.loadPageInteraction = newrelic.interaction();</script><script data-pace-options='{"restartOnRequestAfter": 100, "eventLag": false, "ajax": {"trackMethods": ["GET", "PUT", "POST", "DELETE"]}}' src="common/forks/pace/pace.min.js?1.75.1-20220310-1436"></script><link href="/progress.css?1.75.1-20220310-1436" rel="stylesheet"/><script src="nexus-ui-core/nexus-ui-pollyfills/v1.2.0/nexusUiPollyfills.min.js"></script><script src="nexus-ui-core/nexus-ui-security/v1.26.0/security.min.js"></script><script src="nexus-ui-core/nexus-ui-api-access/v1.18.0/nexusUiApiAccess.min.js"></script><script src="nexus-ui-core/nexus-layout-core/v1.96.0/nexusLayoutCore.min.js"></script><script src="nexus-ui-core/nexus-menu-structure/v1.110.0/nexusMenuStructure.min.js"></script><link href="/bootstrap-libraries-fd993b5d.css" rel="stylesheet"><link href="/nexusCore-7bbc0936.css" rel="stylesheet"><link href="/core-0ec8c72f.css" rel="stylesheet"></head><body nx-keypress-events><div id="nexusLayout"><div id="nexusLayoutPatientId" class="container-fluid"><div data-ui-view><div class="sk-rotating-plane"></div><div class="progress-info">Initialiserer...</div></div></div><div nx-dev-widget></div></div><script>(function (global) {
+			var NexusUiSecurity = global.NexusUiSecurity;
+			global.nexusUiSecurity = new NexusUiSecurity(global.nexusConfiguration, {
+				trackErrorFn: function(message) {
+					if (typeof newrelic !== 'undefined') {
+						newrelic.noticeError(message);
+					}
+				},
+				keepEventsForForwarder: true
+			});
+
+			if (global.nexusUiSecurity.startApp()) {
+				function replaceCustomerName(urlPattern) {
+					var customerToken = /#customerName#/gi;
+					return urlPattern.replace(customerToken, nexusConfiguration.customer);
+				}
+				function replaceCustomerName_backwardCompatible(urlPattern) {
+					var customerToken = /#customerName#/gi;
+					if (customerToken.test(urlPattern)) {
+						return urlPattern.replace(customerToken, nexusConfiguration.customer);
+					} else {
+						return urlPattern + nexusConfiguration.customer;
+					}
+				}
+
+				var logViewerUrl = replaceCustomerName(nexusConfiguration.logViewer_baseUrl);
+				var baseUrl = nexusConfiguration.apiServer_baseUrl;
+				if (nexusConfiguration.apiServer_gatewayUrl) {
+					baseUrl = nexusConfiguration.apiServer_gatewayUrl;
+				}
+				var serverUrl = replaceCustomerName_backwardCompatible(baseUrl);
+				var backendUrl = replaceCustomerName(nexusConfiguration.backend_baseUrl);
+				var enPlan = nexusConfiguration.enPlan;
+				global.nexusApiAccess = new NexusApiAccess(serverUrl, backendUrl,
+						function () {
+							var token = global.nexusUiSecurity.context.getAccessToken();
+							return "Bearer " + token;
+						});
+
+				var NexusMenuStructure = global.NexusMenuStructure;
+				global.nexusMenuStructure = new NexusMenuStructure({
+					getLogViewerUrl: function () {
+						return logViewerUrl;
+					},
+					getEnPlanUrls: function() {
+						return enPlan;
+					}
+				});
+				var patientUrlPattern = /\/citizen\/([^\/!filter|search]+)/;
+				var NexusLayoutCore = global.nexusLayout.NexusLayoutCore;
+				global.nexusLayoutCore = new NexusLayoutCore(global.nexusApiAccess, nexusMenuStructure, patientUrlPattern,
+						function (reason) {
+							global.nexusUiSecurity.logout(reason);
+						},
+						global.nexusUiSecurity.referrerStore,
+						enPlan
+				);
+				global.nexusLayoutCore.drawLayout({
+					logViewerUrl: logViewerUrl,
+					enPlanLinks: enPlan,
+					headerColor: nexusConfiguration.headerColor,
+					nexusLayoutElementId: "nexusLayout",
+					menuVariants: {
+						nativeApp: window.navigator.userAgent === "TabletApp",
+						development: nexusConfiguration.development
+					},
+					features: global.window.applicationFeatures
+				});
+
+				var NexusLayoutPatient = global.nexusLayout.NexusLayoutPatient;
+				global.nexusLayoutPatient = new NexusLayoutPatient(global.nexusApiAccess, nexusMenuStructure,  patientUrlPattern, true, "whenwide", true, {
+					menuVariants: {
+						development: nexusConfiguration.development
+					},
+					features: global.window.applicationFeatures
+				});
+				global.nexusLayoutPatient.drawPatientLayout("nexusLayoutPatientId");
+			}
+		})(this);</script><script src="/bootstrap-libraries-aced4755.js"></script><script src="/nexusCore-7f344dd4.js"></script><script src="/core-b99d59c4.js"></script><script src="/main-2f94186f.js"></script></body></html>
