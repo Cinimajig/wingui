@@ -47,7 +47,7 @@ impl From<*const u16> for WideStr {
 
 impl From<*mut u16> for WideStr {
     fn from(ptr: *mut u16) -> Self {
-        Self { ptr as _ }
+        Self { ptr as *const u16 }
     }
 }
 
@@ -104,7 +104,7 @@ impl From<*const u16> for WideString {
 
 impl From<*mut u16> for WideString {
     fn from(ptr: *mut u16) -> Self {
-        Self::from_raw_ptr(ptr as _)
+        Self::from_raw_ptr(ptr as *const u16)
     }
 }
 
